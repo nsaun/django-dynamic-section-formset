@@ -1,6 +1,6 @@
 [submodule "jquery_jeditable"]
 	path = jquery_jeditable
-	url = git@github.com:tuupola/jquery_jeditable.git
+	url = git@github.com:nsaun/jquery_jeditable.git
 [submodule "django-dynamic-formset"]
 	path = django-dynamic-formset
 	url = git@github.com:nsaun/django-dynamic-formset.git
