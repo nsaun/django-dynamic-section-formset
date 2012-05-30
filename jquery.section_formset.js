@@ -40,14 +40,6 @@
 				newItem.append(
 					'<div><a class="delete-section"'+
 					' href="javascript:void(0)">delete section</a></div>');
-				delSection=newItem.find('.delete-section');
-				delSection.click(function() {
-					/* First delete all rows individually, going through
-					 * graceful deletion path for jquery.formset.js.
-					 */
-					$(this).parents(topSelector).find('.delete-row').click();
-					$(this).parents(topSelector).remove();
-				});
 				
 				/* Lastly, click the new section title for edit */
 				newItem.find('.' + options.sectionNameClass).click();
@@ -63,15 +55,31 @@
 			{
 				var newItem = source.clone(true);
 				
+				/* jeditable events dont carry over gracefully - it will select the wrong element.
+				 * Unbind the event from the field and reregister the heading as editable.
+				 */
+				newItemSectionField = newItem.children('.' + options.sectionNameClass).first();
+				newItemSectionField.unbind('click');
+				newItemSectionField.editable(_sectionNameUpdated, options.editableSettings);
+				
 				/* Cloning needs to account for custom attributes.  The reset attribute
 				 * (which is stored on the actual DOM object by the jeditable plugin)
-				 * won't be cloned automatically by jquery's qlone function, so explicitly
+				 * won't be cloned automatically by jquery's clone function, so explicitly
 				 * copy this attribute or the cancel button won't work.'
 				 */
-				newItem.children('.' + options.sectionNameClass)[0].reset = 
+				newItemSectionField.reset = 
 					source.children('.' + options.sectionNameClass)[0].reset;
 					
 				return newItem;
+			},
+			
+			deleteSection = function()
+			{
+				/* First delete all rows individually, going through the
+				 * graceful deletion path for jquery.formset.js.
+				 */
+				$(this).parents(topSelector).find('.delete-row').click();
+				$(this).parents(topSelector).remove();
 			},
 			
 			/**
@@ -146,7 +154,7 @@
 				}
 			
 				/* Fill in section index value */
-				newItem.find('.' + options.formSectionFieldIndexClass).val(
+				newItem.find('.' + options.formSectionFieldIndexClass).first().val(
 					getSectionIndex(newItem) );
 			}
 			
@@ -170,13 +178,16 @@
 		/******* INITIALIZE ********/
 			
 		/* Attach pre/post remove events */
-		options.formsetSettings.postAdd = handleItemAdded;
-		options.formsetSettings.preRemove = handleItemRemoved;
+		options.formsetSettings.added = handleItemAdded;
+		options.formsetSettings.beforeremove = handleItemRemoved;
 		options.formsetSettings.formCssClass = options.formsetCssClass;
+		
 
 		/* Apply formset plugin to the selected formset section */
         formset = $$.find('.' + options.formsetNameClass)
             .formset(options.formsetSettings);
+		
+		options._formset = formset;
         
         /* Apply editable plugin to all editable section titles */    
         $$.find('.' + options.sectionNameClass)
@@ -205,7 +216,10 @@
         }
         
         /* make generic and relative to current tree */
-        $('#' + options.newSectionButtonId).click(createSection);
+        $('#' + options.newSectionButtonId).live('click', createSection);
+        
+        /* Attach the delete event */
+        $('.delete-section').live('click', deleteSection);
 
         return $$;
     }
@@ -233,7 +247,6 @@
 		 *  -addText
 		 *  -deleteText
 		 *  -extraClasses
-		 * 
          * Overriding other options will likely cause problems with this plugin.
          */ 
     	formsetSettings: null,                /* Passed to jquery.formset.js (optional) */
