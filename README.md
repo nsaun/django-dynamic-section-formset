@@ -11,4 +11,4 @@ Usage:
 Coming.
 
 Status:
-In development - need to integrate changes into jquery.formset.js before submodules are compatible.
+Complete.... just undocumented.
